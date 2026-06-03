@@ -1,8 +1,11 @@
 {
-  "outputDirectory": "public",
-  "functions": {
-    "api/lesson.js": {
-      "maxDuration": 30
-    }
-  }
+  "version": 2,
+  "builds": [
+    { "src": "api/lesson.js", "use": "@vercel/node" },
+    { "src": "public/index.html", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/lesson", "dest": "/api/lesson.js" },
+    { "src": "/", "dest": "/public/index.html" }
+  ]
 }
