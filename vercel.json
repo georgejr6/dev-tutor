@@ -5,6 +5,7 @@
     }
   },
   "rewrites": [
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/api/lesson", "destination": "/api/lesson" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ]
 }
