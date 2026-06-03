@@ -1,11 +1,8 @@
 {
+  "outputDirectory": "public",
   "functions": {
     "api/lesson.js": {
       "maxDuration": 30
     }
-  },
-  "rewrites": [
-    { "source": "/api/lesson", "destination": "/api/lesson" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
+  }
 }

@@ -2,8 +2,8 @@
   "name": "dev-tutor",
   "version": "1.0.0",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node railway-server.js",
+    "dev": "node railway-server.js"
   },
   "engines": {
     "node": ">=18"
