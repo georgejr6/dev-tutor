@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dev Tutor</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0d0d0d;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  header {
+    padding: 14px 20px;
+    border-bottom: 1px solid #1e1e1e;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  header h1 {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  /* ── Mode toggle ── */
+  .mode-toggle {
+    display: flex;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 8px;
+    padding: 3px;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .mode-btn {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+
+  .mode-btn.active {
+    background: #4f7bff;
+    color: #fff;
+  }
+
+  /* ── Input row ── */
+  .input-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  #topic-input {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #2e2e2e;
+    border-radius: 8px;
+    color: #e0e0e0;
+    font-size: 14px;
+    padding: 9px 14px;
+    outline: none;
+    transition: border-color .2s;
+    min-width: 0;
+  }
+  #topic-input:focus { border-color: #4f7bff; }
+  #topic-input::placeholder { color: #444; }
+
+  #teach-btn {
+    background: #4f7bff;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s, opacity .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #teach-btn:hover { background: #3a63e8; }
+  #teach-btn:disabled { opacity: .4; cursor: default; }
+
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #555;
+    flex-shrink: 0;
+  }
+  .controls input[type=range] { width: 70px; accent-color: #4f7bff; }
+
+  /* ── Chips ── */
+  .chips {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    color: #888;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .chip:hover { border-color: #4f7bff; color: #4f7bff; }
+
+  /* ── Main split ── */
+  main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+  }
+
+  /* ── Code panel ── */
+  #code-panel {
+    background: #141414;
+    border-right: 1px solid #1e1e1e;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #concept-title {
+    padding: 12px 20px 6px;
+    font-size: 12px;
+    color: #555;
+    font-weight: 600;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    min-height: 34px;
+  }
+
+  #code-wrapper {
+    flex: 1;
+    padding: 0 20px 20px;
+  }
+
+  pre {
+    background: transparent !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  code.language-python {
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 13.5px;
+    line-height: 1.8;
+    background: transparent !important;
+  }
+
+  .code-line {
+    display: block;
+    border-radius: 3px;
+    transition: background .2s;
+    padding: 0 6px;
+    margin: 0 -6px;
+  }
+
+  .code-line.active { background: rgba(79,123,255,.09); }
+
+  .cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: #4f7bff;
+    vertical-align: text-bottom;
+    animation: blink .7s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── Explain panel ── */
+  #explain-panel {
+    background: #0f0f0f;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .explain-card {
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 14px 16px;
+    animation: slideIn .25s ease;
+  }
+
+  .explain-card.active-card {
+    border-color: #4f7bff55;
+    background: #131825;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .explain-line-num {
+    font-size: 10px;
+    color: #4f7bff;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .explain-code-ref {
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 11.5px;
+    color: #888;
+    background: #1d1d1d;
+    border-radius: 4px;
+    padding: 3px 8px;
+    margin-bottom: 9px;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .explain-text {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: #bbb;
+  }
+
+  .explain-analogy {
+    margin-top: 9px;
+    font-size: 12.5px;
+    color: #777;
+    border-left: 2px solid #4f7bff44;
+    padding-left: 10px;
+    line-height: 1.55;
+  }
+
+  /* ── Intro card ── */
+  .intro-card {
+    background: #161616;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .intro-card h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 7px;
+  }
+
+  .intro-card p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #888;
+  }
+
+  /* ── Status ── */
+  #status {
+    padding: 6px 20px;
+    font-size: 11px;
+    color: #444;
+    border-top: 1px solid #1a1a1a;
+    background: #0d0d0d;
+    letter-spacing: .3px;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 8px;
+    color: #2a2a2a;
+    font-size: 12px;
+    text-align: center;
+    padding: 30px;
+  }
+
+  .empty-state svg { width: 36px; height: 36px; }
+
+  /* ── Mobile ── */
+  @media (max-width: 700px) {
+    body { overflow: auto; }
+
+    main {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto auto;
+      overflow: visible;
+      height: auto;
+    }
+
+    #code-panel {
+      border-right: none;
+      border-bottom: 1px solid #1e1e1e;
+      min-height: 40vh;
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+
+    #explain-panel {
+      min-height: 40vh;
+      max-height: none;
+    }
+
+    .header-top { flex-wrap: wrap; }
+
+    .controls { display: none; }
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #252525; border-radius: 4px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <h1>Dev Tutor</h1>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="python">🐍 Python</button>
+      <button class="mode-btn" data-mode="ai">🧠 AI &amp; LLM</button>
+    </div>
+    <div class="input-row" style="flex:1;display:flex;gap:10px;">
+      <input type="text" id="topic-input" placeholder="What do you want to learn?" />
+      <button id="teach-btn">Teach Me</button>
+    </div>
+    <div class="controls">
+      <span>Speed</span>
+      <input type="range" id="speed-slider" min="10" max="120" value="45" />
+    </div>
+  </div>
+  <div class="chips" id="chips"></div>
+</header>
+
+<main>
+  <div id="code-panel">
+    <div id="concept-title"></div>
+    <div id="code-wrapper">
+      <pre><code class="language-python" id="code-display"></code></pre>
+    </div>
+    <div id="code-empty" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M8 9l3 3-3 3M13 15h3M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/>
+      </svg>
+      <span>Pick a topic and hit Teach Me</span>
+    </div>
+  </div>
+
+  <div id="explain-panel">
+    <div id="explain-empty" class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+      </svg>
+      <span>Explanations appear here line by line</span>
+    </div>
+  </div>
+</main>
+
+<div id="status">Ready</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+<script>
+// ── Mode config ───────────────────────────────────
+const MODES = {
+  python: {
+    chips: ['variables & types','functions','classes','list comprehensions','decorators','async/await','generators','error handling','file I/O','*args & **kwargs'],
+    systemPrompt: `You are a Python tutor for a visual, builder-type learner who is an entrepreneur, not an academic.
+Explanations must be:
+- Plain English, zero jargon unless immediately defined
+- Visual analogies to real-world or business concepts preferred
+- 2-3 sentences max per explanation
+- Punchy and direct — no walls of text`,
+    placeholder: 'e.g. "decorators" or "async/await"'
+  },
+  ai: {
+    chips: ['tokenization','embeddings','attention mechanism','transformer architecture','backpropagation','loss functions','fine-tuning & LoRA','RAG','RLHF','vector databases'],
+    systemPrompt: `You are an AI/LLM educator teaching concepts like transformer architecture, attention, embeddings, tokenization, and training.
+Your student is a hands-on builder and entrepreneur — not an academic.
+Use Python pseudocode when it makes the concept clearer, but focus on the conceptual model.
+Explanations must be:
+- Plain English, zero math notation unless explained in words first
+- Visual analogies strongly preferred (e.g. "attention is like a spotlight")
+- 2-3 sentences max per line explanation
+- Build intuition, not formulas`,
+    placeholder: 'e.g. "attention mechanism" or "tokenization"'
+  }
+};
+
+let currentMode = 'python';
+let animating = false;
+let stopFlag = false;
+
+// ── DOM refs ──────────────────────────────────────
+const statusEl     = document.getElementById('status');
+const codeEl       = document.getElementById('code-display');
+const titleEl      = document.getElementById('concept-title');
+const explainPanel = document.getElementById('explain-panel');
+const chipsEl      = document.getElementById('chips');
+const inputEl      = document.getElementById('topic-input');
+
+// ── Mode toggle ───────────────────────────────────
+document.querySelectorAll('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMode = btn.dataset.mode;
+    renderChips();
+    inputEl.placeholder = MODES[currentMode].placeholder;
+    inputEl.value = '';
+  });
+});
+
+function renderChips() {
+  chipsEl.innerHTML = '';
+  MODES[currentMode].chips.forEach(label => {
+    const chip = document.createElement('button');
+    chip.className = 'chip';
+    chip.textContent = label;
+    chip.addEventListener('click', () => {
+      inputEl.value = label;
+      startLesson();
+    });
+    chipsEl.appendChild(chip);
+  });
+}
+
+renderChips();
+inputEl.placeholder = MODES[currentMode].placeholder;
+
+// ── Helpers ───────────────────────────────────────
+function setStatus(msg) { statusEl.textContent = msg; }
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function charDelay() {
+  const speed = parseInt(document.getElementById('speed-slider').value);
+  return Math.round(60 - ((speed - 10) / 110) * 55);
+}
+
+function escapeHtml(str = '') {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Fetch lesson ──────────────────────────────────
+async function fetchLesson(topic) {
+  const { systemPrompt } = MODES[currentMode];
+
+  const userPrompt = `Teach me: "${topic}"
+
+Return ONLY a JSON object — no markdown, no code fences. Exactly this shape:
+{
+  "title": "short lesson title",
+  "intro": "1-2 sentence plain-English overview",
+  "lines": [
+    {
+      "code": "one line of code or pseudocode",
+      "explanation": "what this does in plain english",
+      "analogy": "optional visual analogy, or empty string"
+    }
+  ]
+}
+
+Rules:
+- 6–14 lines total
+- Blank spacer lines: {"code":"","explanation":"","analogy":""}
+- Code comments count as lines with their own explanation
+- Output ONLY the JSON. Nothing else.`;
+
+  const resp = await fetch('/api/lesson', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 2048,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userPrompt }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${resp.status}`);
+  }
+
+  const data = await resp.json();
+  const raw = data.content[0].text.trim()
+    .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+  return JSON.parse(raw);
+}
+
+// ── Animate lesson ────────────────────────────────
+async function animateLesson(lesson) {
+  document.getElementById('code-empty').style.display = 'none';
+  document.getElementById('explain-empty').style.display = 'none';
+
+  codeEl.textContent = '';
+  titleEl.textContent = lesson.title;
+  explainPanel.innerHTML = '';
+
+  const intro = document.createElement('div');
+  intro.className = 'intro-card';
+  intro.innerHTML = `<h2>${escapeHtml(lesson.title)}</h2><p>${escapeHtml(lesson.intro)}</p>`;
+  explainPanel.appendChild(intro);
+
+  const spans = lesson.lines.map((_, i) => {
+    const s = document.createElement('span');
+    s.className = 'code-line';
+    s.id = `ls-${i}`;
+    codeEl.appendChild(s);
+    return s;
+  });
+
+  let cardIdx = 0;
+
+  for (let i = 0; i < lesson.lines.length; i++) {
+    if (stopFlag) break;
+    const line = lesson.lines[i];
+
+    spans.forEach(s => s.classList.remove('active'));
+    spans[i].classList.add('active');
+
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor';
+    spans[i].appendChild(cursor);
+
+    const textNode = document.createTextNode('');
+    spans[i].insertBefore(textNode, cursor);
+
+    for (const ch of line.code) {
+      if (stopFlag) break;
+      textNode.textContent += ch;
+      await sleep(charDelay());
+    }
+
+    cursor.remove();
+    Prism.highlightElement(codeEl);
+    spans[i].appendChild(document.createTextNode('\n'));
+
+    if (line.code || line.explanation) {
+      const card = document.createElement('div');
+      card.className = 'explain-card active-card';
+      card.id = `card-${cardIdx}`;
+      card.innerHTML = `
+        <div class="explain-line-num">Line ${cardIdx + 1}</div>
+        <div class="explain-code-ref">${escapeHtml(line.code)}</div>
+        <div class="explain-text">${escapeHtml(line.explanation)}</div>
+        ${line.analogy ? `<div class="explain-analogy">💡 ${escapeHtml(line.analogy)}</div>` : ''}
+      `;
+
+      // de-activate previous card
+      explainPanel.querySelectorAll('.explain-card').forEach(c => c.classList.remove('active-card'));
+      explainPanel.appendChild(card);
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      cardIdx++;
+    }
+
+    await sleep(line.code ? 350 : 100);
+  }
+
+  spans.forEach(s => s.classList.remove('active'));
+  setStatus(`Done — ${lesson.lines.filter(l => l.code).length} lines. Try another topic or switch modes.`);
+}
+
+// ── Start ─────────────────────────────────────────
+async function startLesson() {
+  const topic = inputEl.value.trim();
+  if (!topic) return;
+
+  if (animating) { stopFlag = true; await sleep(200); }
+  stopFlag = false;
+  animating = true;
+
+  const btn = document.getElementById('teach-btn');
+  btn.disabled = true;
+  setStatus('Generating lesson…');
+
+  try {
+    const lesson = await fetchLesson(topic);
+    setStatus('Animating…');
+    await animateLesson(lesson);
+  } catch (err) {
+    setStatus(`Error: ${err.message}`);
+    console.error(err);
+  } finally {
+    animating = false;
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('teach-btn').addEventListener('click', startLesson);
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') startLesson(); });
+</script>
+</body>
+</html>
